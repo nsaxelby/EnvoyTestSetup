@@ -27,6 +27,28 @@ resource "aws_ecs_task_definition" "my-task-definition" {
           awslogs-stream-prefix : "awslogs-httpbin"
         }
       }
+    },
+    {
+      name      = "envoy"
+      image     = "${aws_ecr_repository.my-ecr-repo.repository_url}:latest"
+      cpu       = 512
+      memory    = 1024
+      essential = true
+      portMappings = [
+        {
+          containerPort = 8888
+          hostPort      = 8888
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-create-group = "true"
+          awslogs-group        = "awslogs-ecs"
+          awslogs-region       = "eu-west-1"
+          awslogs-stream-prefix : "awslogs-envoy"
+        }
+      }
     }
   ])
 }
