@@ -21,7 +21,7 @@ resource "aws_networkfirewall_rule_group" "my-stateful-rule-group" {
   rule_group {
     rules_source {
       stateful_rule {
-        action = "DROP"
+        action = "ALERT"
         header {
           destination      = "ANY"
           destination_port = "ANY"
@@ -42,7 +42,7 @@ resource "aws_networkfirewall_rule_group" "my-stateful-rule-group" {
       }
 
       stateful_rule {
-        action = "PASS"
+        action = "ALERT"
         header {
           destination      = "ANY"
           destination_port = "80"
@@ -55,26 +55,10 @@ resource "aws_networkfirewall_rule_group" "my-stateful-rule-group" {
           keyword  = "sid"
           settings = ["22"]
         }
-      }
-
-      stateful_rule {
-        action = "DROP"
-        header {
-          destination      = "ANY"
-          destination_port = "ANY"
-          direction        = "ANY"
-          protocol         = "IP"
-          source           = "ANY"
-          source_port      = "ANY"
-        }
-        rule_option {
-          keyword  = "sid"
-          settings = ["33"]
-        }
 
         rule_option {
           keyword  = "msg"
-          settings = ["\"DROP ALL NON 80\""]
+          settings = ["\"Alert on 80\""]
         }
       }
     }
