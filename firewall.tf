@@ -84,7 +84,7 @@ resource "aws_networkfirewall_rule_group" "my-stateless-rule-group" {
         stateless_rule {
           priority = 1
           rule_definition {
-            actions = ["aws:forward_to_sfe"]
+            actions = ["aws:pass"]
             match_attributes {
               source {
                 address_definition = "0.0.0.0/0"
@@ -107,10 +107,10 @@ resource "aws_networkfirewall_firewall_policy" "myfwpolicy" {
   firewall_policy {
     stateless_default_actions          = ["aws:pass"]
     stateless_fragment_default_actions = ["aws:pass"]
-    stateful_rule_group_reference {
-      priority     = 2
-      resource_arn = aws_networkfirewall_rule_group.my-stateful-rule-group.arn
-    }
+    # stateful_rule_group_reference {
+    #   priority     = 2
+    #   resource_arn = aws_networkfirewall_rule_group.my-stateful-rule-group.arn
+    # }
 
     stateless_rule_group_reference {
       priority     = 1
