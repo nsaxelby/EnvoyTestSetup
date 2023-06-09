@@ -9,6 +9,22 @@ resource "aws_ecs_task_definition" "my-task-definition" {
   task_role_arn = aws_iam_role.ecs_task_role.arn
   container_definitions = jsonencode([
     {
+      name      = "envoy"
+      image     = "${aws_ecr_repository.my-ecr-repo.repository_url}:latest"
+      cpu       = 480
+      memory    = 960
+      essential = true
+      portMappings = [
+        {
+          containerPort = 8888
+          hostPort      = 8888
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awsfirelens"
+      }
+    },
+    {
       name      = "httpbin"
       image     = "kennethreitz/httpbin"
       cpu       = 512
@@ -49,22 +65,6 @@ resource "aws_ecs_task_definition" "my-task-definition" {
         }
       }
       memoryReservation = 50
-    },
-    {
-      name      = "envoy"
-      image     = "${aws_ecr_repository.my-ecr-repo.repository_url}:latest"
-      cpu       = 480
-      memory    = 960
-      essential = true
-      portMappings = [
-        {
-          containerPort = 8888
-          hostPort      = 8888
-        }
-      ]
-      logConfiguration = {
-        logDriver = "awsfirelens"
-      }
     }
   ])
   depends_on = [null_resource.docker_packaging, null_resource.docker_packaging_fluentbit]

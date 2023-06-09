@@ -2,7 +2,7 @@ static_resources:
   listeners:
   - name: listener_0
     address:
-      socket_address: { address: 127.0.0.1, port_value: 8888 }
+      socket_address: { address: 0.0.0.0, port_value: 8888 }
     filter_chains:
     - filters:
       - name: envoy.filters.network.http_connection_manager
@@ -26,7 +26,9 @@ static_resources:
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
               log_format:
-                text_format: "%LOCAL_REPLY_BODY%:%RESPONSE_CODE%:path=%REQ(:path)%\n"
+                json_format:
+                  response_code: "%RESPONSE_CODE%"
+                  remote_ip: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
           http_filters:
           - name: envoy.filters.http.router
             typed_config:
@@ -44,5 +46,5 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: httpbin
+                address: 127.0.0.1
                 port_value: 80

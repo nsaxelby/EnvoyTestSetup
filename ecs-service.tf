@@ -17,8 +17,8 @@ resource "aws_ecs_service" "my-service" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.my-target-group.arn
-    container_name   = "httpbin"
-    container_port   = 80
+    container_name   = "envoy"
+    container_port   = 8888
   }
 
   depends_on = [aws_lb_listener.my-listener]
@@ -34,6 +34,14 @@ resource "aws_security_group" "ecs-sg" {
     description = "80 from vpc"
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.main.cidr_block]
+  }
+
+  ingress {
+    description = "8888 from vpc"
+    from_port   = 8888
+    to_port     = 8888
     protocol    = "tcp"
     cidr_blocks = [aws_vpc.main.cidr_block]
   }
