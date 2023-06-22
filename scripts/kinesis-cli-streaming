@@ -1,0 +1,5 @@
+KINESIS_STREAM_NAME='envoy-log-output';
+SHARD_ITERATOR=$(aws kinesis get-shard-iterator --shard-id shardId-000000000000 --shard-iterator-type LATEST --stream-name $KINESIS_STREAM_NAME --query 'ShardIterator' --region eu-west-1);
+aws kinesis get-records --limit 10 --shard-iterator $SHARD_ITERATOR --region eu-west-1 | jq -r '.Records[0].Data' | base64 --decode | gunzip
+
+

@@ -1,0 +1,11 @@
+CREATE TABLE KinesisTable (
+  `remote_ip` STRING,
+  `status_code` INT)
+PARTITIONED BY (column1, column2)
+WITH (
+  'connector' = 'kinesis',
+  'stream' = 'envoy-ip-records',
+  'aws.region' = 'eu-west-1',
+  'scan.stream.initpos' = 'LATEST',
+  'format' = 'json'
+);
