@@ -11,8 +11,8 @@ resource "aws_ecs_task_definition" "my-task-definition" {
     {
       name      = "envoy"
       image     = "${aws_ecr_repository.my-ecr-repo.repository_url}:latest"
-      cpu       = 480
-      memory    = 960
+      cpu       = 512
+      memory    = 1024
       essential = true
       portMappings = [
         {
@@ -21,7 +21,13 @@ resource "aws_ecs_task_definition" "my-task-definition" {
         }
       ]
       logConfiguration = {
-        logDriver = "awsfirelens"
+        logDriver = "awslogs"
+        options = {
+          awslogs-create-group  = "true"
+          awslogs-group         = "awslogs-ecs"
+          awslogs-region        = "eu-west-1"
+          awslogs-stream-prefix = "awslogs-envoy"
+        }
       }
     },
     {
@@ -45,27 +51,7 @@ resource "aws_ecs_task_definition" "my-task-definition" {
           awslogs-stream-prefix = "awslogs-httpbin"
         }
       }
-    },
-    {
-      essential = true,
-      image     = "${aws_ecr_repository.my-ecr-repo-fluent.repository_url}:latest"
-      cpu       = 32
-      memory    = 64
-      name      = "log_router"
-      firelensConfiguration = {
-        type = "fluentbit"
-      }
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = "awslogs-ecs"
-          awslogs-region        = "eu-west-1"
-          awslogs-create-group  = "true"
-          awslogs-stream-prefix = "firelens"
-        }
-      }
-      memoryReservation = 50
     }
   ])
-  depends_on = [null_resource.docker_packaging, null_resource.docker_packaging_fluentbit]
+  depends_on = [null_resource.docker_packaging]
 }
