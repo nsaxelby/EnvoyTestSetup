@@ -33,6 +33,7 @@ static_resources:
                 json_format:
                   response_code: "%RESPONSE_CODE%"
                   remote_ip: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
+                  request_time: "%START_TIME%"
           http_filters:
           - name: envoy.filters.http.router
             typed_config:
