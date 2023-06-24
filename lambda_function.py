@@ -20,7 +20,7 @@ def processRecords(records):
         if data['messageType'] == 'DATA_MESSAGE':
             for log_event in data['logEvents']:
                 string_message = log_event['message']
-                yield string_message
+                yield strip_timestamp(string_message)
 
 def loadJsonGzipBase64(base64Data):
     return json.loads(gzip.decompress(base64.b64decode(base64Data)))
@@ -37,3 +37,20 @@ def lambda_handler(event, context):
             raise
 
     return {"statusCode":200, "body":"Successfully posted"}
+    
+def strip_timestamp(record_string):
+    request_time_loc = record_string.find("request_time")
+    if request_time_loc >= 0:
+        # 3 because ":"
+        # 
+        start_of_time_t = request_time_loc + len("request_time") + 3 + len("2023-01-01")
+        rec_string_new = record_string[0:start_of_time_t] + ' ' + record_string[start_of_time_t + 1:]
+        # Now strip trailing Z, find the next Z
+        print(rec_string_new)
+        z_location = rec_string_new.find("Z", request_time_loc)
+        print(z_location)
+        if z_location >= 0:
+            rec_string_without_z = rec_string_new[0:z_location] + rec_string_new[z_location+1:]
+            print(rec_string_without_z)
+        
+    return record_string
