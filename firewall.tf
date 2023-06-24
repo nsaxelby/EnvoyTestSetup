@@ -1,19 +1,21 @@
 resource "aws_networkfirewall_firewall" "nwfw" {
+  count               = local.network_firewall_enabled ? 1 : 0
   name                = "my-network-firewall"
-  firewall_policy_arn = aws_networkfirewall_firewall_policy.myfwpolicy.arn
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.myfwpolicy[0].arn
   vpc_id              = aws_vpc.main.id
   subnet_mapping {
-    subnet_id = aws_subnet.fw-subnet-1.id
+    subnet_id = aws_subnet.fw-subnet-1[0].id
   }
   subnet_mapping {
-    subnet_id = aws_subnet.fw-subnet-2.id
+    subnet_id = aws_subnet.fw-subnet-2[0].id
   }
   subnet_mapping {
-    subnet_id = aws_subnet.fw-subnet-3.id
+    subnet_id = aws_subnet.fw-subnet-3[0].id
   }
 }
 
 resource "aws_networkfirewall_rule_group" "my-stateful-rule-group" {
+  count    = local.network_firewall_enabled ? 1 : 0
   capacity = 100
   name     = "my-rule-group"
   type     = "STATEFUL"
@@ -74,6 +76,7 @@ resource "aws_networkfirewall_rule_group" "my-stateful-rule-group" {
 }
 
 resource "aws_networkfirewall_rule_group" "my-stateless-rule-group" {
+  count       = local.network_firewall_enabled ? 1 : 0
   description = "Forward all to stateful"
   capacity    = 5
   name        = "my-stateless-rule-group"
@@ -102,7 +105,8 @@ resource "aws_networkfirewall_rule_group" "my-stateless-rule-group" {
 }
 
 resource "aws_networkfirewall_firewall_policy" "myfwpolicy" {
-  name = "my-fw-policy"
+  count = local.network_firewall_enabled ? 1 : 0
+  name  = "my-fw-policy"
 
   firewall_policy {
     stateless_default_actions          = ["aws:pass"]
@@ -114,7 +118,7 @@ resource "aws_networkfirewall_firewall_policy" "myfwpolicy" {
 
     stateless_rule_group_reference {
       priority     = 1
-      resource_arn = aws_networkfirewall_rule_group.my-stateless-rule-group.arn
+      resource_arn = aws_networkfirewall_rule_group.my-stateless-rule-group[0].arn
     }
     stateful_engine_options {
       rule_order = "STRICT_ORDER"
@@ -123,7 +127,8 @@ resource "aws_networkfirewall_firewall_policy" "myfwpolicy" {
 }
 
 resource "aws_networkfirewall_logging_configuration" "cloudwatch-logging-config-nwfw" {
-  firewall_arn = aws_networkfirewall_firewall.nwfw.arn
+  count        = local.network_firewall_enabled ? 1 : 0
+  firewall_arn = aws_networkfirewall_firewall.nwfw[0].arn
   logging_configuration {
     log_destination_config {
       log_destination = {

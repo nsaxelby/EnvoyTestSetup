@@ -19,8 +19,16 @@ resource "aws_route_table" "pub1-rt" {
 }
 
 resource "aws_route" "pub1-route-to-fw" {
+  count                  = local.network_firewall_enabled ? 1 : 0
   destination_cidr_block = "0.0.0.0/0"
-  vpc_endpoint_id        = element([for ss in tolist(aws_networkfirewall_firewall.nwfw.firewall_status[0].sync_states) : ss.attachment[0].endpoint_id if ss.attachment[0].subnet_id == aws_subnet.fw-subnet-1.id], 0)
+  vpc_endpoint_id        = element([for ss in tolist(aws_networkfirewall_firewall.nwfw[0].firewall_status[0].sync_states) : ss.attachment[0].endpoint_id if ss.attachment[0].subnet_id == aws_subnet.fw-subnet-1[0].id], 0)
+  route_table_id         = aws_route_table.pub1-rt.id
+}
+
+resource "aws_route" "pub1-route-to-internet" {
+  count                  = local.network_firewall_enabled ? 0 : 1
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.igw.id
   route_table_id         = aws_route_table.pub1-rt.id
 }
 
@@ -48,8 +56,16 @@ resource "aws_route_table" "pub2-rt" {
 }
 
 resource "aws_route" "pub2-route-to-fw" {
+  count                  = local.network_firewall_enabled ? 1 : 0
   destination_cidr_block = "0.0.0.0/0"
-  vpc_endpoint_id        = element([for ss in tolist(aws_networkfirewall_firewall.nwfw.firewall_status[0].sync_states) : ss.attachment[0].endpoint_id if ss.attachment[0].subnet_id == aws_subnet.fw-subnet-2.id], 0)
+  vpc_endpoint_id        = element([for ss in tolist(aws_networkfirewall_firewall.nwfw[0].firewall_status[0].sync_states) : ss.attachment[0].endpoint_id if ss.attachment[0].subnet_id == aws_subnet.fw-subnet-2[0].id], 0)
+  route_table_id         = aws_route_table.pub2-rt.id
+}
+
+resource "aws_route" "pub2-route-to-internet" {
+  count                  = local.network_firewall_enabled ? 0 : 1
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.igw.id
   route_table_id         = aws_route_table.pub2-rt.id
 }
 
@@ -77,8 +93,16 @@ resource "aws_route_table" "pub3-rt" {
 }
 
 resource "aws_route" "pub3-route-to-fw" {
+  count                  = local.network_firewall_enabled ? 1 : 0
   destination_cidr_block = "0.0.0.0/0"
-  vpc_endpoint_id        = element([for ss in tolist(aws_networkfirewall_firewall.nwfw.firewall_status[0].sync_states) : ss.attachment[0].endpoint_id if ss.attachment[0].subnet_id == aws_subnet.fw-subnet-3.id], 0)
+  vpc_endpoint_id        = element([for ss in tolist(aws_networkfirewall_firewall.nwfw[0].firewall_status[0].sync_states) : ss.attachment[0].endpoint_id if ss.attachment[0].subnet_id == aws_subnet.fw-subnet-3[0].id], 0)
+  route_table_id         = aws_route_table.pub3-rt.id
+}
+
+resource "aws_route" "pub3-route-to-internet" {
+  count                  = local.network_firewall_enabled ? 0 : 1
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.igw.id
   route_table_id         = aws_route_table.pub3-rt.id
 }
 
