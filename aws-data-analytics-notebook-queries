@@ -1,8 +1,8 @@
 %flink.ssql
-CREATE TABLE KinesisTableRaw (
+CREATE TABLE KinesisTable6 (
   `remote_ip` STRING,
   `response_code` INT,
-  `request_time` STRING)
+  `request_time` TIMESTAMP)
 PARTITIONED BY (remote_ip)
 WITH (
   'connector' = 'kinesis',
@@ -12,11 +12,6 @@ WITH (
   'format' = 'json'
 );
 
-%flink.ssql(type=update)
-select remote_ip as remote_ip,
-       response_code as response_code,
-       to_timestamp(replace(replace(request_time, 'T', ' '), 'Z', ' '),'yyyy-MM-dd HH:mm:ss.SSS') as request_time
-from KinesisTableRaw;
 
 %flink.ssql(type=append, paralellism=1, refreshInterval=1000, threshold=60000)
 select TUMBLE_START(request_time, INTERVAL '5' SECOND) as start_time, remote_ip, count(1) from
