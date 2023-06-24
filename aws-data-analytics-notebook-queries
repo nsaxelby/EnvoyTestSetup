@@ -2,7 +2,8 @@
 CREATE TABLE KinesisTable6 (
   `remote_ip` STRING,
   `response_code` INT,
-  `request_time` TIMESTAMP)
+  `request_time` TIMESTAMP(3),
+  WATERMARK FOR request_time AS request_time - INTERVAL '5' SECOND)
 PARTITIONED BY (remote_ip)
 WITH (
   'connector' = 'kinesis',
@@ -13,10 +14,52 @@ WITH (
 );
 
 
+// Prints rolling window of requests per 5 seconds
 %flink.ssql(type=append, paralellism=1, refreshInterval=1000, threshold=60000)
-select TUMBLE_START(request_time, INTERVAL '5' SECOND) as start_time, remote_ip, count(1) from
+select TUMBLE_START(b.request_time, INTERVAL '5' SECOND) as start_time, b.remote_ip, count(1) from
 (select remote_ip as remote_ip,
        response_code as response_code,
-       to_timestamp(replace(replace(request_time, 'T', ' '), 'Z', ' '),'yyyy-MM-dd HH:mm:ss.SSS') as request_time
-from KinesisTableRaw)
-group by TUMBLE(request_time, INTERVAL '5' SECOND), remote_ip;
+       request_time as request_time
+from KinesisTable7) as b
+group by TUMBLE(b.request_time, INTERVAL '5' SECOND), b.remote_ip;
+
+
+
+%flink.ssql
+CREATE TABLE IF NOT EXISTS KinesisTable8 (
+  `remote_ip` STRING,
+  `response_code` INT,
+  `request_time` TIMESTAMP(3),
+  WATERMARK FOR request_time AS request_time - INTERVAL '5' SECOND)
+PARTITIONED BY (remote_ip)
+WITH (
+  'connector' = 'kinesis',
+  'stream' = 'envoy-ip-records',
+  'aws.region' = 'eu-west-1',
+  'scan.stream.initpos' = 'LATEST',
+  'format' = 'json'
+);
+
+
+CREATE TABLE IF NOT EXISTS BlockTable1 (
+    `start_time` TIMESTAMP(3),
+    `remote_ip` STRING,
+    `count` BIGINT NOT NULL)
+WITH (
+  'connector' = 'kinesis',
+  'stream' = 'ExampleOutputStream',
+  'aws.region' = 'us-west-1',
+  'scan.stream.initpos' = 'LATEST',
+  'format' = 'json'
+);
+
+
+
+%flink.ssql(type=append, paralellism=1, refreshInterval=1000, threshold=60000)
+INSERT INTO BlockTable1 SELECT start_time, remote_ip, count_per_period FROM (select TUMBLE_START(b.request_time, INTERVAL '5' SECOND) as start_time, b.remote_ip, count(1) as count_per_period from
+(select remote_ip as remote_ip,
+       response_code as response_code,
+       request_time as request_time
+from KinesisTable8) as b
+group by TUMBLE(b.request_time, INTERVAL '5' SECOND), b.remote_ip
+HAVING count(1) > 5)
