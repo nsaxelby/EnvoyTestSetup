@@ -27,3 +27,18 @@ resource "aws_kinesis_stream" "envoy_ip_records" {
     stream_mode = "PROVISIONED"
   }
 }
+
+resource "aws_kinesis_stream" "envoy_ip_records_processed_from_kda" {
+  name             = "envoy-ip-records-from-kda"
+  shard_count      = 1
+  retention_period = 24
+
+  shard_level_metrics = [
+    "IncomingBytes",
+    "OutgoingBytes",
+  ]
+
+  stream_mode_details {
+    stream_mode = "PROVISIONED"
+  }
+}

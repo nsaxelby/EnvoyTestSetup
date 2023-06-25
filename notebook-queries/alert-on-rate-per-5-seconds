@@ -1,0 +1,51 @@
+%flink.ssql
+CREATE TABLE IF NOT EXISTS KinesisTable7(
+    `remote_ip` STRING,
+    `response_code` INT,
+    `request_time` TIMESTAMP(3),
+    `arrival_time` TIMESTAMP(3) METADATA FROM 'timestamp' VIRTUAL,
+    WATERMARK FOR request_time AS request_time - INTERVAL '5' SECOND)
+PARTITIONED BY(remote_ip)
+WITH(
+    'connector' = 'kinesis',
+    'stream' = 'envoy-ip-records',
+    'aws.region' = 'eu-west-1',
+    'scan.stream.initpos' = 'LATEST',
+    'format' = 'json'
+);
+
+CREATE TABLE IF NOT EXISTS KinesisOutputAlerts1(
+    `window_start_time` TIMESTAMP(3),
+    `remote_ip` STRING,
+    `count_requests` BIGINT NOT NULL,
+    `alertTypeName` STRING)
+PARTITIONED BY(remote_ip)
+WITH(
+    'connector' = 'kinesis',
+    'stream' = 'envoy-ip-records-from-kda',
+    'aws.region' = 'eu-west-1',
+    'scan.stream.initpos' = 'LATEST',
+    'format' = 'json',
+    'sink.producer.aggregation-max-count' = '1'
+);
+
+
+// Prints rolling window of requests per 5 seconds
+%flink.ssql(type = append, paralellism = 1, refreshInterval = 1000, threshold = 60000)
+select TUMBLE_START(b.request_time, INTERVAL '5' SECOND) as start_time, b.remote_ip as remoteIp, count(1) as countOfRequests, 'IPRateExceeded' as alertTypeName from
+    (select remote_ip as remote_ip,
+        response_code as response_code,
+        request_time as request_time
+from KinesisTable7) as b
+group by TUMBLE(b.request_time, INTERVAL '5' SECOND), b.remote_ip
+HAVING count(1) > 5;
+
+// sending to k steam on having > 
+%flink.ssql(type=append, paralellism=1, refreshInterval=1000, threshold=60000)
+INSERT INTO KinesisOutputAlerts1 select TUMBLE_START(b.request_time, INTERVAL '5' SECOND) as start_time, b.remote_ip as remoteIp, count(1) as countOfRequests, 'IPRateExceeded' as alertTypeName from
+    (select remote_ip as remote_ip,
+        response_code as response_code,
+        request_time as request_time
+from KinesisTable7) as b
+group by TUMBLE(b.request_time, INTERVAL '5' SECOND), b.remote_ip
+HAVING count(1) > 5;

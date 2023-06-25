@@ -7,6 +7,8 @@ resource "aws_lambda_function" "kinesis-cw-log-transformer" {
   role             = aws_iam_role.lambda-role.arn
   runtime          = "python3.8"
   source_code_hash = data.archive_file.lambda.output_base64sha256
+  timeout          = 60
+  memory_size      = 512
 
   environment {
     variables = {
@@ -84,7 +86,8 @@ resource "aws_lambda_event_source_mapping" "k-cw-transformer-mapper" {
   function_name                      = aws_lambda_function.kinesis-cw-log-transformer.arn
   starting_position                  = "LATEST"
   batch_size                         = 5
-  maximum_batching_window_in_seconds = 2
+  maximum_batching_window_in_seconds = 1
+
   destination_config {
     on_failure {
       destination_arn = aws_sqs_queue.lambda-transform-dlq.arn
