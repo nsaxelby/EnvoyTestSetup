@@ -1,5 +1,5 @@
 %flink.ssql
-CREATE TABLE IF NOT EXISTS KinesisTable7(
+CREATE TABLE IF NOT EXISTS EnvoyLogs(
     `remote_ip` STRING,
     `response_code` INT,
     `request_time` TIMESTAMP(3),
@@ -8,13 +8,13 @@ CREATE TABLE IF NOT EXISTS KinesisTable7(
 PARTITIONED BY(remote_ip)
 WITH(
     'connector' = 'kinesis',
-    'stream' = 'envoy-ip-records',
+    'stream' = 'envoy-logs',
     'aws.region' = 'eu-west-1',
     'scan.stream.initpos' = 'LATEST',
     'format' = 'json'
 );
 
-CREATE TABLE IF NOT EXISTS KinesisOutputAlerts1(
+CREATE TABLE IF NOT EXISTS Alerts(
     `window_start_time` TIMESTAMP(3),
     `remote_ip` STRING,
     `count_requests` BIGINT NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS KinesisOutputAlerts1(
 PARTITIONED BY(remote_ip)
 WITH(
     'connector' = 'kinesis',
-    'stream' = 'envoy-ip-records-from-kda',
+    'stream' = 'kda-events',
     'aws.region' = 'eu-west-1',
     'scan.stream.initpos' = 'LATEST',
     'format' = 'json',
@@ -36,16 +36,16 @@ select TUMBLE_START(b.request_time, INTERVAL '5' SECOND) as start_time, b.remote
     (select remote_ip as remote_ip,
         response_code as response_code,
         request_time as request_time
-from KinesisTable7) as b
+from EnvoyLogs) as b
 group by TUMBLE(b.request_time, INTERVAL '5' SECOND), b.remote_ip
 HAVING count(1) > 5;
 
 // sending to k steam on having > 
 %flink.ssql(type=append, paralellism=1, refreshInterval=1000, threshold=60000)
-INSERT INTO KinesisOutputAlerts1 select TUMBLE_START(b.request_time, INTERVAL '5' SECOND) as start_time, b.remote_ip as remoteIp, count(1) as countOfRequests, 'IPRateExceeded' as alertTypeName from
+INSERT INTO Alerts select TUMBLE_START(b.request_time, INTERVAL '5' SECOND) as start_time, b.remote_ip as remoteIp, count(1) as countOfRequests, 'IPRateExceeded' as alertTypeName from
     (select remote_ip as remote_ip,
         response_code as response_code,
         request_time as request_time
-from KinesisTable7) as b
+from EnvoyLogs) as b
 group by TUMBLE(b.request_time, INTERVAL '5' SECOND), b.remote_ip
 HAVING count(1) > 5;

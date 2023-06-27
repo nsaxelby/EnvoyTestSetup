@@ -1,9 +1,9 @@
 
 resource "aws_lambda_function" "kinesis-kda-alert-processor" {
   description      = "Listens to events on kinesis kda alert stream"
-  filename         = "kinesis_kda_alert_procesor.zip"
-  function_name    = "kinesis-kda-alert-processor-lambda"
-  handler          = "kinesis_kda_alert_procesor.lambda_handler"
+  filename         = "lambda_kda_alert_processor.zip"
+  function_name    = "kda-alert-processor-lambda"
+  handler          = "lambda_kda_alert_processor.lambda_handler"
   role             = aws_iam_role.lambda-role.arn
   runtime          = "python3.8"
   source_code_hash = data.archive_file.lambda1.output_base64sha256
@@ -20,8 +20,8 @@ resource "aws_lambda_function" "kinesis-kda-alert-processor" {
 
 data "archive_file" "lambda1" {
   type        = "zip"
-  source_file = "kinesis_kda_alert_procesor.py"
-  output_path = "kinesis_kda_alert_procesor.zip"
+  source_file = "lambda_kda_alert_processor.py"
+  output_path = "lambda_kda_alert_processor.zip"
 }
 
 data "aws_iam_policy_document" "assume_role_policy1" {
