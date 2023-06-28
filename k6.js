@@ -5,7 +5,7 @@ export const options = {
 };
 
 export default function () {
-  var address = "http://my-nlb-542a7ae420daefa1.elb.eu-west-1.amazonaws.com"
+  var address = "http://my-nlb-d59ba067e5ae1d58.elb.eu-west-1.amazonaws.com"
   http.get(address + "/json");
   http.get(address + "/status/500");
   http.get(address + "/status/404");

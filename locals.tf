@@ -1,4 +1,4 @@
 
 locals {
-  network_firewall_enabled = "false"
+  network_firewall_enabled = "true"
 }
