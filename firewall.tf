@@ -14,24 +14,39 @@ resource "aws_networkfirewall_firewall" "nwfw" {
   }
 }
 
-resource "aws_networkfirewall_rule_group" "my-stateful-rule-group" {
-  count    = local.network_firewall_enabled ? 1 : 0
-  capacity = 100
-  name     = "my-rule-group"
-  type     = "STATEFUL"
-
-  tags = {
-    Tag1 = "Value1"
-    Tag2 = "Value2"
-  }
-}
-
 resource "aws_networkfirewall_rule_group" "my-stateless-rule-group" {
   count       = local.network_firewall_enabled ? 1 : 0
-  description = "Forward all to stateful"
-  capacity    = 5
+  description = "Block"
+  capacity    = 100
   name        = "my-stateless-rule-group"
   type        = "STATELESS"
+  rule_group {
+    rules_source {
+      stateless_rules_and_custom_actions {
+        custom_action {
+          action_definition {
+            publish_metric_action {
+              dimension {
+                value = "2"
+              }
+            }
+          }
+          action_name = "ExampleMetricsAction"
+        }
+        stateless_rule {
+          priority = 9
+          rule_definition {
+            actions = ["aws:pass"]
+            match_attributes {
+              source {
+                address_definition = "0.0.0.0/0"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 resource "aws_networkfirewall_firewall_policy" "myfwpolicy" {

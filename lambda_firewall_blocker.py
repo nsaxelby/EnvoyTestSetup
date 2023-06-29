@@ -28,24 +28,60 @@ def block_ip(ipaddress):
         print("statelessRulesAndCustomActions: " + str(statelessRulesAndCustomActions))
         statelessRules = statelessRulesAndCustomActions["StatelessRules"]
         print("statelessRules: " + str(statelessRules))
+        alreadyBlocked = False
         for rule in statelessRules:
-            if rule["RuleDefinition"]["MatchAttributes"]["Sources"]["AddressDefinition"] == ipaddress:
+            print(rule["RuleDefinition"]["MatchAttributes"]["Sources"][0]["AddressDefinition"])
+            if rule["RuleDefinition"]["MatchAttributes"]["Sources"][0]["AddressDefinition"] == ipaddress:
                 print("ip already blocked: " + ipaddress)
-        else:
-            ruletoAdd = {"RuleDefinition": {"MatchAttributes": {"Sources": [{"AddressDefinition": ipaddress}]}}, "Actions": ["aws:drop"], "Priority": 1}
+                alreadyBlocked = True
+                
+        if alreadyBlocked == False:
+            ruletoAdd = {"RuleDefinition": {"MatchAttributes": {"Sources": [{"AddressDefinition": ipaddress}]}, "Actions": ["aws:drop"]}, "Priority": 1}
             statelessRules.append(ruletoAdd)
             print(statelessRules)
-            
-        response = client.update_rule_group(UpdateToken=responseDescribe["UpdateToken"],
-                                            RuleGroupArn=rule_group_arn,
-                                            RuleGroup=responseDescribe["RuleGroup"],
-                                            Type='STATELESS',
-                                            DryRun=False)
-        print(response)
+            print("Sending following payload: ")
+            print(responseDescribe["RuleGroup"])
+            response = client.update_rule_group(UpdateToken=responseDescribe["UpdateToken"],
+                                                RuleGroupArn=rule_group_arn,
+                                                RuleGroup=responseDescribe["RuleGroup"],
+                                                Type='STATELESS',
+                                                DryRun=False)
+            print(response)
     except:
         raise
 
     
 
 def unblock_ip(ipaddress):
-  print("unblocking ip: " + ipaddress)
+    print("unblocking ip: " + ipaddress)
+    print("blocking ip: " + ipaddress)
+    responseDescribe = client.describe_rule_group(RuleGroupArn=rule_group_arn,Type='STATELESS')
+    try:
+        rulesSource = responseDescribe["RuleGroup"]["RulesSource"]
+        print("rulesSource: " + str(rulesSource)) 
+        statelessRulesAndCustomActions = rulesSource["StatelessRulesAndCustomActions"]
+        print("statelessRulesAndCustomActions: " + str(statelessRulesAndCustomActions))
+        statelessRules = statelessRulesAndCustomActions["StatelessRules"]
+        print("statelessRules: " + str(statelessRules))
+        isInBlockList = False
+        newStatelessArray = []
+        for rule in statelessRules:
+            print(rule["RuleDefinition"]["MatchAttributes"]["Sources"][0]["AddressDefinition"])
+            if rule["RuleDefinition"]["MatchAttributes"]["Sources"][0]["AddressDefinition"] == ipaddress:
+                print("ip blocked, so we just remove it from block: " + ipaddress)
+                isInBlockList = True
+            else:
+                newStatelessArray.append(rule)
+        
+        if isInBlockList:
+            statelessRulesAndCustomActions["StatelessRules"] = newStatelessArray
+            print(responseDescribe["RuleGroup"])
+    
+            response = client.update_rule_group(UpdateToken=responseDescribe["UpdateToken"],
+                                                RuleGroupArn=rule_group_arn,
+                                                RuleGroup=responseDescribe["RuleGroup"],
+                                                Type='STATELESS',
+                                                DryRun=False)
+            print(response)
+    except:
+        raise

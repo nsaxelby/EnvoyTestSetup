@@ -24,11 +24,14 @@ WITH(
     'connector' = 'kinesis',
     'stream' = 'kda-events',
     'aws.region' = 'eu-west-1',
-    'scan.stream.initpos' = 'LATEST',
     'format' = 'json',
     'sink.producer.aggregation-max-count' = '1'
 );
 
+
+// Just display all incoming records
+%flink.ssql(type=update)
+SELECT * FROM EnvoyLogs;
 
 // Prints rolling window of requests per 5 seconds
 %flink.ssql(type = append, paralellism = 1, refreshInterval = 1000, threshold = 60000)
