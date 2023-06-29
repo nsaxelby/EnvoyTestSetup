@@ -22,15 +22,17 @@ def block_ip(ipaddress):
     print("blocking ip: " + ipaddress)
     responseDescribe = client.describe_rule_group(RuleGroupArn=rule_group_arn,Type='STATELESS')
     try:
-        rulesSource = responseDescribe["RuleGroup"]["RulesSource"]  
+        rulesSource = responseDescribe["RuleGroup"]["RulesSource"]
+        print("rulesSource: " + str(rulesSource)) 
         statelessRulesAndCustomActions = rulesSource["StatelessRulesAndCustomActions"]
+        print("statelessRulesAndCustomActions: " + str(statelessRulesAndCustomActions))
         statelessRules = statelessRulesAndCustomActions["StatelessRules"]
-        print(statelessRules)
+        print("statelessRules: " + str(statelessRules))
         for rule in statelessRules:
-            if rule["RuleDefinition"]["MatchAttributes"]["Source"]["AddressDefinition"] == ipaddress:
-                print("ip already blocked")
+            if rule["RuleDefinition"]["MatchAttributes"]["Sources"]["AddressDefinition"] == ipaddress:
+                print("ip already blocked: " + ipaddress)
         else:
-            ruletoAdd = {"RuleDefinition": {"RuleDefinition": {"Sources": [{"AddressDefinition": ipaddress}]}}, "Actions": ["BLOCK"]}
+            ruletoAdd = {"RuleDefinition": {"MatchAttributes": {"Sources": [{"AddressDefinition": ipaddress}]}}, "Actions": ["aws:drop"], "Priority": 1}
             statelessRules.append(ruletoAdd)
             print(statelessRules)
             
