@@ -27,7 +27,7 @@ def lambda_handler(event, context):
             jsonobj = json.loads(r)
             jsonobj["alertTypeName"] = "UnblockIP"
             sqs.send_message(QueueUrl=sqs_name, MessageBody=json.dumps(jsonobj), DelaySeconds=block_period_seconds)
-            print("Sent sqs message to unblock with delay of " + block_period_seconds)
+            print("Sent sqs message to unblock with delay of " + str(block_period_seconds))
             
         except ClientError:
             raise

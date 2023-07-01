@@ -41,6 +41,7 @@ def block_ip(ipaddress):
             print(statelessRules)
             print("Sending following payload: ")
             print(responseDescribe["RuleGroup"])
+            print("RESULT: blocked IP: " + ipaddress)
             response = client.update_rule_group(UpdateToken=responseDescribe["UpdateToken"],
                                                 RuleGroupArn=rule_group_arn,
                                                 RuleGroup=responseDescribe["RuleGroup"],
@@ -69,6 +70,7 @@ def unblock_ip(ipaddress):
             print(rule["RuleDefinition"]["MatchAttributes"]["Sources"][0]["AddressDefinition"])
             if rule["RuleDefinition"]["MatchAttributes"]["Sources"][0]["AddressDefinition"] == ipaddress:
                 print("ip blocked, so we just remove it from block: " + ipaddress)
+                print("RESULT: unblocked IP: " + ipaddress)
                 isInBlockList = True
             else:
                 newStatelessArray.append(rule)
