@@ -1,25 +1,27 @@
 
 resource "aws_lambda_function" "kinesis-cw-log-transformer" {
   description      = "Transforms base64 gzipped messages from CW"
-  filename         = "lambda_function_payload.zip"
+  filename         = "lambda_cloudwatch_log_transformer.zip"
   function_name    = "cloudwatch-logs-transformer-lambda"
-  handler          = "lambda_function.lambda_handler"
+  handler          = "lambda_cloudwatch_log_transformer.lambda_handler"
   role             = aws_iam_role.lambda-role.arn
   runtime          = "python3.8"
   source_code_hash = data.archive_file.lambda.output_base64sha256
+  timeout          = 60
+  memory_size      = 512
 
   environment {
     variables = {
-      KINESIS_STREAM = aws_kinesis_stream.envoy_ip_records.arn
+      KINESIS_STREAM = aws_kinesis_stream.envoy_access_log_records.arn
     }
   }
-  depends_on = [aws_kinesis_stream.envoy_ip_records]
+  depends_on = [aws_kinesis_stream.envoy_access_log_records]
 }
 
 data "archive_file" "lambda" {
   type        = "zip"
-  source_file = "lambda_function.py"
-  output_path = "lambda_function_payload.zip"
+  source_file = "lambda_cloudwatch_log_transformer.py"
+  output_path = "lambda_cloudwatch_log_transformer.zip"
 }
 
 data "aws_iam_policy_document" "assume_role_policy" {
@@ -80,11 +82,12 @@ resource "aws_iam_role_policy_attachment" "lambda-pol-attachment" {
 }
 
 resource "aws_lambda_event_source_mapping" "k-cw-transformer-mapper" {
-  event_source_arn                   = aws_kinesis_stream.log_output.arn
+  event_source_arn                   = aws_kinesis_stream.raw_cloudwatch_output.arn
   function_name                      = aws_lambda_function.kinesis-cw-log-transformer.arn
   starting_position                  = "LATEST"
   batch_size                         = 5
-  maximum_batching_window_in_seconds = 2
+  maximum_batching_window_in_seconds = 1
+
   destination_config {
     on_failure {
       destination_arn = aws_sqs_queue.lambda-transform-dlq.arn

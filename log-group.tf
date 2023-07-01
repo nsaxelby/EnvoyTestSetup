@@ -11,7 +11,7 @@ resource "aws_cloudwatch_log_subscription_filter" "cloudwatch-kinesis-subscripti
   role_arn        = aws_iam_role.cloudwatch_sub_role.arn
   log_group_name  = aws_cloudwatch_log_group.awslogs-ecs.name
   filter_pattern  = "remote_ip response_code"
-  destination_arn = aws_kinesis_stream.log_output.arn
+  destination_arn = aws_kinesis_stream.raw_cloudwatch_output.arn
   distribution    = "Random"
   depends_on      = [aws_iam_role_policy_attachment.cloudwatch-sub-pol-attachment]
 }

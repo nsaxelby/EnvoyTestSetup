@@ -1,0 +1,7 @@
+%flink.ssql(type = append, paralellism = 1, refreshInterval = 1000, threshold = 60000)
+select TUMBLE_START(b.request_time, INTERVAL '5' SECOND) as start_time, b.remote_ip as remoteIp, count(1) as countOfRequests, b.response_code as responseCode, 'IPRateExceeded' as alertTypeName from
+    (select remote_ip as remote_ip,
+        response_code as response_code,
+        request_time as request_time
+from EnvoyLogs) as b
+group by TUMBLE(b.request_time, INTERVAL '5' SECOND), b.remote_ip, b.response_code
