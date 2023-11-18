@@ -1,17 +1,17 @@
 resource "aws_eip" "eip1" {
-  vpc = true
+  domain = "vpc"
 }
 
 resource "aws_eip" "eip2" {
-  vpc = true
+  domain = "vpc"
 }
 
 resource "aws_eip" "eip3" {
-  vpc = true
+  domain = "vpc"
 }
 
 resource "aws_eip" "eip-nat1" {
-  vpc = true
+  domain = "vpc"
 }
 
 # I cannot create enough EIPS for 1:1 nat gateways

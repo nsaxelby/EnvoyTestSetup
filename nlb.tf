@@ -16,9 +16,4 @@ resource "aws_lb" "my-nlb" {
     subnet_id     = aws_subnet.public-subnet-3.id
     allocation_id = aws_eip.eip3.id
   }
-
-  access_logs {
-    bucket = module.aws_logs.aws_logs_bucket
-    enabled = true
-  }
 }

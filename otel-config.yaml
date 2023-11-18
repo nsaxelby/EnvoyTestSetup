@@ -1,0 +1,31 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 127.0.0.1:4317
+
+processors:
+  batch:
+
+exporters:
+  kafka:
+    protocol_version: 3.2.0
+    brokers: REPLACE_ME_BROKERS
+    topic: envoy-logs
+    auth:
+      sasl:
+        username: my-user
+        password: supersecrets
+        mechanism: SCRAM-SHA-512
+      tls: {}
+    encoding: raw
+
+service:
+  telemetry:
+    metrics:
+      level: none
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [kafka]
