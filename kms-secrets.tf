@@ -34,7 +34,7 @@ resource "aws_secretsmanager_secret_policy" "msk-secret-policy" {
 }
 
 resource "aws_msk_scram_secret_association" "example" {
-    count      = local.kafka_msk_enabled ? 1 : 0
+  count      = local.kafka_msk_enabled ? 1 : 0
   cluster_arn     = aws_msk_cluster.example[0].arn
   secret_arn_list = [aws_secretsmanager_secret.secretsmanager-secret-for-msk[0].arn]
 

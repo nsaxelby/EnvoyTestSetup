@@ -16,7 +16,7 @@ resource "aws_msk_cluster" "example" {
         volume_size = 1000
       }
     }
-    security_groups = [aws_security_group.sg-msk.id]
+    security_groups = [aws_security_group.sg-msk[0].id]
   }
 
   encryption_info {
@@ -57,13 +57,33 @@ resource "aws_msk_cluster" "example" {
 
 
 resource "aws_security_group" "sg-msk" {
+  count  = local.kafka_msk_enabled ? 1 : 0
   vpc_id = aws_vpc.main.id
   ingress {
-    description      = "From ECS"
-    from_port        = 9096
-    to_port          = 9096
-    protocol         = "tcp"
+    description     = "From ECS 9094"
+    from_port       = 9094
+    to_port         = 9094
+    protocol        = "tcp"
     security_groups = [aws_security_group.ecs-sg.id]
+  }
+  ingress {
+    description     = "From ECS 9096"
+    from_port       = 9096
+    to_port         = 9096
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs-sg.id]
+  }
+  ingress {
+    from_port   = 0
+    to_port     = 9094
+    protocol    = "TCP"
+    cidr_blocks = [local.cidr_blocks_bastion_host]
+  }
+  ingress {
+    from_port   = 0
+    to_port     = 9096
+    protocol    = "TCP"
+    cidr_blocks = [local.cidr_blocks_bastion_host]
   }
 }
 

@@ -5,3 +5,5 @@ terraform.tfstate.backup
 .terraform
 .terraform.tfstate.lock.info
 *.zip
+brokers.txt
+cert.pem

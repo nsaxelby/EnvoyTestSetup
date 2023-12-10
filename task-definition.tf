@@ -90,5 +90,7 @@ resource "aws_ecs_task_definition" "my-task-definition" {
       }
     }
   ])
-  depends_on = [null_resource.docker_packaging]
+  depends_on = [null_resource.docker_packaging,
+    null_resource.docker-packaging-httpbin-image,
+  null_resource.docker-packaging-otel-image]
 }
