@@ -7,3 +7,5 @@ terraform.tfstate.backup
 *.zip
 brokers.txt
 cert.pem
+FlinkStreamingApp/target
+FlinkStreamingApp/dependency-reduced-pom.xml
