@@ -74,16 +74,23 @@ resource "aws_security_group" "sg-msk" {
     security_groups = [aws_security_group.ecs-sg.id]
   }
   ingress {
-    from_port   = 0
+    from_port   = 9094
     to_port     = 9094
     protocol    = "TCP"
     cidr_blocks = [local.cidr_blocks_bastion_host]
   }
   ingress {
-    from_port   = 0
+    from_port   = 9094
     to_port     = 9096
     protocol    = "TCP"
     cidr_blocks = [local.cidr_blocks_bastion_host]
+  }
+
+  ingress {
+    from_port       = 9094
+    to_port         = 9096
+    protocol        = "TCP"
+    security_groups = [aws_security_group.flinksg.id]
   }
 }
 
