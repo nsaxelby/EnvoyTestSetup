@@ -16,3 +16,8 @@ Find your network load balancer address, e.g.: `my-nlb-dc2c1186ac4f1bcb.elb.eu-w
 
 Curl the URL: `http://your-nlb-dns-name.com/json` and you will get a template JSON response from HTTPBIN.
 
+Note, on destroy, the SG and one of the subnets may fail to delete e.g. looping on:
+`aws_subnet.private-subnet-2: Still destroying... [id=subnet-02c14dbd437c41787, 3m50s elapsed]
+aws_security_group.flinksg: Still destroying... [id=sg-02d2488532da9a0c2, 3m50s elapsed]`
+
+This is a bug. When destroying the managed flink, it appears the provider doesn't clean up the network interfaces used by the flink app. You may need to go into the console and delete the network interfaces manually, Ec2 > Network and Security > network interfaces.

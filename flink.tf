@@ -187,8 +187,8 @@ resource "aws_kinesisanalyticsv2_application" "envoy-test-flink" {
       parallelism_configuration {
         auto_scaling_enabled = true
         configuration_type   = "CUSTOM"
-        parallelism          = 6
-        parallelism_per_kpu  = 4
+        parallelism          = 1
+        parallelism_per_kpu  = 1
       }
     }
 

@@ -61,8 +61,9 @@ public class BasicStreamingJob {
 
                 kafkaProducerConfig.setProperty("sasl.jaas.config",
                                 "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user\" password=\"supersecrets\";");
-                kafkaProducerConfig.setProperty("transaction.max.timeout.ms", "1000");
-                kafkaProducerConfig.setProperty("transaction.timeout.ms", "1000");
+                // kafkaProducerConfig.setProperty("transaction.max.timeout.ms", "1000");
+                kafkaProducerConfig.setProperty("transaction.timeout.ms", "60000");
+                // kafkaProducerConfig.setProperty("transactional.id", "my-transactional-id");
 
                 return KafkaSink.<String>builder()
                                 .setBootstrapServers(
