@@ -1,0 +1,11 @@
+FROM alpine:latest AS builder
+USER root
+ARG BROKERS
+COPY otel-config.yaml /tmp/otel-config.yaml
+RUN echo "brokers ${BROKERS}" 
+RUN sed -i "s/REPLACE_ME_BROKERS/${BROKERS}/g" /tmp/otel-config.yaml
+RUN cat /tmp/otel-config.yaml
+
+
+FROM otel/opentelemetry-collector:0.88.0
+COPY --from=builder /tmp/otel-config.yaml /etc/otel-collector/otel-config.yaml

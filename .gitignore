@@ -5,3 +5,7 @@ terraform.tfstate.backup
 .terraform
 .terraform.tfstate.lock.info
 *.zip
+brokers.txt
+cert.pem
+FlinkStreamingApp/target
+FlinkStreamingApp/dependency-reduced-pom.xml

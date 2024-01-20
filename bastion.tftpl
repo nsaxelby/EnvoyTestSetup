@@ -1,0 +1,31 @@
+#!/bin/bash
+
+yum update -y
+yum install java-1.8.0 -y
+yum install java-17-amazon-corretto-devel.x86_64 -y
+yum install wget -y
+yum install -y nano
+wget https://archive.apache.org/dist/kafka/3.4.0/kafka_2.13-3.4.0.tgz
+tar -xzf kafka_2.13-3.4.0.tgz
+rm kafka_2.13-3.4.0.tgz
+
+cat > bootstrap-servers <<- "EOF"
+${bootstrap_server_1}
+${bootstrap_server_2}
+${bootstrap_server_3}
+EOF
+
+cat > config.properties <<- "EOF"
+security.protocol=SASL_SSL
+sasl.mechanism=SCRAM-SHA-512
+sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+  username="${kafka_username}" \
+  password="${kafka_password}";
+EOF
+
+./kafka_2.13-3.4.0/bin/kafka-topics.sh --bootstrap-server "${bootstrap_server_3}" --command-config config.properties --create --topic envoy-logs --partitions 1 --replication-factor 3
+
+./kafka_2.13-3.4.0/bin/kafka-topics.sh --bootstrap-server "${bootstrap_server_3}" --command-config config.properties --create --topic envoy-logs-output --partitions 1 --replication-factor 3
+
+# /kafka_2.13-3.4.0/bin/kafka-console-consumer.sh --bootstrap-server $(head -1 /bootstrap-servers) --consumer.config /config.properties --topic envoy-logs
+# /kafka_2.13-3.4.0/bin/kafka-console-consumer.sh --bootstrap-server $(head -1 /bootstrap-servers) --consumer.config /config.properties --topic envoy-logs-output

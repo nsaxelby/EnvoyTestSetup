@@ -110,3 +110,44 @@ resource "aws_route_table_association" "pub3-rt-assoc" {
   subnet_id      = aws_subnet.public-subnet-3.id
   route_table_id = aws_route_table.pub3-rt.id
 }
+
+
+resource "aws_subnet" "bastion-host-subnet" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = local.cidr_blocks_bastion_host
+  map_public_ip_on_launch = true
+  availability_zone       = "eu-west-1a"
+  tags = {
+    Name = "bastion-host-subnet"
+  }
+}
+
+resource "aws_route_table" "pubbst-rt" {
+  count  = local.kafka_msk_enabled ? 1 : 0
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "pubbst-rt"
+  }
+}
+
+resource "aws_route" "pubbst-route-to-fw" {
+  count                  = local.kafka_msk_enabled ? local.network_firewall_enabled ? 1 : 0 : 0
+  destination_cidr_block = "0.0.0.0/0"
+  vpc_endpoint_id        = element([for ss in tolist(aws_networkfirewall_firewall.nwfw[0].firewall_status[0].sync_states) : ss.attachment[0].endpoint_id if ss.attachment[0].subnet_id == aws_subnet.fw-subnet-3[0].id], 0)
+  route_table_id         = aws_route_table.pubbst-rt[0].id
+}
+
+resource "aws_route" "pubbst-route-to-internet" {
+  count                  = local.kafka_msk_enabled ? local.network_firewall_enabled ? 0 : 1 : 0
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.igw.id
+  route_table_id         = aws_route_table.pubbst-rt[0].id
+}
+
+resource "aws_route_table_association" "pubbst-rt-assoc" {
+  count = local.kafka_msk_enabled ? 1 : 0
+
+  subnet_id      = aws_subnet.bastion-host-subnet.id
+  route_table_id = aws_route_table.pubbst-rt[0].id
+}
