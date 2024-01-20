@@ -27,7 +27,5 @@ EOF
 
 ./kafka_2.13-3.4.0/bin/kafka-topics.sh --bootstrap-server "${bootstrap_server_3}" --command-config config.properties --create --topic envoy-logs-output --partitions 1 --replication-factor 3
 
-
-# /kafka_2.13-3.4.0/bin/kafka-console-consumer.sh --bootstrap-server b-2.mycluster.rxlqyx.c4.kafka.eu-west-1.amazonaws.com:9096 --consumer.config /config.properties --topic envoy-logs
-# /kafka_2.13-3.4.0/bin/kafka-console-consumer.sh --bootstrap-server b-2.mycluster.rxlqyx.c4.kafka.eu-west-1.amazonaws.com:9096 --consumer.config /config.properties --topic envoy-logs-output
-# /kafka_2.13-3.4.0/bin/kafka-console-consumer.sh --bootstrap-server b-3.mycluster.67gx0v.c4.kafka.eu-west-1.amazonaws.com:9096 --consumer.config /config.properties --topic envoy-logs
+# /kafka_2.13-3.4.0/bin/kafka-console-consumer.sh --bootstrap-server $(head -1 /bootstrap-servers) --consumer.config /config.properties --topic envoy-logs
+# /kafka_2.13-3.4.0/bin/kafka-console-consumer.sh --bootstrap-server $(head -1 /bootstrap-servers) --consumer.config /config.properties --topic envoy-logs-output
