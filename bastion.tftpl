@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Install kafka tools
 yum update -y
 yum install java-1.8.0 -y
 yum install java-17-amazon-corretto-devel.x86_64 -y
@@ -9,22 +10,58 @@ wget https://archive.apache.org/dist/kafka/3.4.0/kafka_2.13-3.4.0.tgz
 tar -xzf kafka_2.13-3.4.0.tgz
 rm kafka_2.13-3.4.0.tgz
 
+# Install docker on amazon ami
+yum install docker -y
+sudo usermod -a -G docker ec2-user
+id ec2-user
+# Reload a Linux user's group assignments to docker w/o logout
+newgrp docker
+sudo systemctl enable docker.service
+sudo systemctl start docker.service
+
+# Output kafka bootstrap servers
 cat > bootstrap-servers <<- "EOF"
 ${bootstrap_server_1}
 ${bootstrap_server_2}
 ${bootstrap_server_3}
 EOF
 
+# Output connection props for kafka
 cat > config.properties <<- "EOF"
 security.protocol=SASL_SSL
 sasl.mechanism=SCRAM-SHA-512
-sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
-  username="${kafka_username}" \
-  password="${kafka_password}";
+sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="my-user" password="supersecrets";
 EOF
 
-./kafka_2.13-3.4.0/bin/kafka-topics.sh --bootstrap-server "${bootstrap_server_3}" --command-config config.properties --create --topic envoy-logs --partitions 1 --replication-factor 3
+# Install docker compose
+sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
 
+# Output kafka-ui docker compose
+cat > docker-compose.yml << EOF
+version: '2'
+services:
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8080:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: my-kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${bootstrap_server_1}
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: SASL_SSL
+      KAFKA_CLUSTERS_0_PROPERTIES_SASL_MECHANISM: SCRAM-SHA-512
+      KAFKA_CLUSTERS_0_PROPERTIES_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="my-user" password="supersecrets";'
+      DYNAMIC_CONFIG_ENABLED: true # not necessary for sasl auth, added for tests
+EOF
+
+# Note, there is no auth here, anybody can access your kafka-ui without auth, do not use in anything but dev!
+# Run kafkaui
+docker-compose -f /docker-compose.yml -p myproj up -d
+
+# create two kafka topics
+./kafka_2.13-3.4.0/bin/kafka-topics.sh --bootstrap-server "${bootstrap_server_3}" --command-config config.properties --create --topic envoy-logs --partitions 1 --replication-factor 3
 ./kafka_2.13-3.4.0/bin/kafka-topics.sh --bootstrap-server "${bootstrap_server_3}" --command-config config.properties --create --topic envoy-logs-output --partitions 1 --replication-factor 3
 
 # /kafka_2.13-3.4.0/bin/kafka-console-consumer.sh --bootstrap-server $(head -1 /bootstrap-servers) --consumer.config /config.properties --topic envoy-logs

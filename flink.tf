@@ -4,7 +4,7 @@ resource "aws_s3_bucket" "flink-application-bucket" {
 
 resource "aws_s3_object" "envoy-test-flink-app-jar-file" {
   bucket     = aws_s3_bucket.flink-application-bucket.id
-  key        = "envoy-test-flink-application"
+  key        = "envoy-test-flink-application-${local.buildtime}"
   source     = "FlinkStreamingApp/target/${local.buildtime}.jar"
   depends_on = [null_resource.build-flink-jar]
 }

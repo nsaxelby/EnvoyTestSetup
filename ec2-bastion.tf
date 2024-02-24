@@ -53,6 +53,12 @@ resource "aws_security_group" "bastion-host" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   egress {
     from_port   = 0
     to_port     = 0
@@ -87,13 +93,14 @@ data "local_file" "foo" {
 }
 
 resource "aws_instance" "bastion-host" {
-  count                  = local.kafka_msk_enabled ? 1 : 0
-  depends_on             = [aws_msk_cluster.example]
-  ami                    = data.aws_ami.amazon_linux_2023.id
-  instance_type          = "t2.micro"
-  key_name               = aws_key_pair.private_key[0].key_name
-  subnet_id              = aws_subnet.bastion-host-subnet.id
-  vpc_security_group_ids = [aws_security_group.bastion-host[0].id]
+  count                       = local.kafka_msk_enabled ? 1 : 0
+  depends_on                  = [aws_msk_cluster.example]
+  ami                         = data.aws_ami.amazon_linux_2023.id
+  instance_type               = "t2.micro"
+  key_name                    = aws_key_pair.private_key[0].key_name
+  subnet_id                   = aws_subnet.bastion-host-subnet.id
+  vpc_security_group_ids      = [aws_security_group.bastion-host[0].id]
+  user_data_replace_on_change = true
   user_data = templatefile("bastion.tftpl", {
     bootstrap_server_1 = split(",", data.local_file.foo[0].content)[0]
     bootstrap_server_2 = split(",", data.local_file.foo[0].content)[1]
