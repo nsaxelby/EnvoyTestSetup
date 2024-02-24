@@ -31,7 +31,7 @@ public class BasicStreamingJob {
                                                 (String) sourceProperties.get("bootstrap.servers"))
                                 .setTopics((String) sourceProperties.get("topic"))
                                 .setGroupId("kafka-replication")
-                                .setStartingOffsets(OffsetsInitializer.earliest())
+                                .setStartingOffsets(OffsetsInitializer.latest())
                                 .setValueOnlyDeserializer(new SimpleStringSchema())
                                 .setProperty("security.protocol", "SASL_SSL")
                                 .setProperty("sasl.mechanism", "SCRAM-SHA-512")
@@ -57,13 +57,14 @@ public class BasicStreamingJob {
                 Properties kafkaProducerConfig = new Properties();
                 kafkaProducerConfig.setProperty("security.protocol", "SASL_SSL");
                 kafkaProducerConfig.setProperty("sasl.mechanism", "SCRAM-SHA-512");
+                // kafkaProducerConfig.setProperty("transactional.id", "transact1");
+                // kafkaProducerConfig.setProperty("client.id.prefix", "blahh234");
+                kafkaProducerConfig.setProperty("transaction.timeout.ms", "1000");
+                // kafkaProducerConfig.setProperty("transaction.max.timeout.ms", "1000");
                 // TODO hard coded username and password for now, don't do this in prod
 
                 kafkaProducerConfig.setProperty("sasl.jaas.config",
                                 "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"my-user\" password=\"supersecrets\";");
-                // kafkaProducerConfig.setProperty("transaction.max.timeout.ms", "1000");
-                kafkaProducerConfig.setProperty("transaction.timeout.ms", "60000");
-                // kafkaProducerConfig.setProperty("transactional.id", "my-transactional-id");
 
                 return KafkaSink.<String>builder()
                                 .setBootstrapServers(
@@ -75,7 +76,7 @@ public class BasicStreamingJob {
                                                                 new SimpleStringSchema())
                                                 .build())
                                 .setKafkaProducerConfig(kafkaProducerConfig)
-                                .setDeliverGuarantee(DeliveryGuarantee.EXACTLY_ONCE).build();
+                                .setDeliverGuarantee(DeliveryGuarantee.NONE).build();
         }
 
         public static void main(String[] args) throws Exception {

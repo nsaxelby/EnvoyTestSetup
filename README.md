@@ -1,5 +1,5 @@
 # EnvoyTestSetup
-Terraform for setting up an ECS Fargate Envoy + HTTPBIN (upstream) with a NLB (3x EIPs) and a Network Firewall.
+Terraform for setting up an ECS Fargate Envoy + HTTPBIN (upstream) with a NLB (3x EIPs), a Network Firewall (optional) and Envoy Access Logs being output to Kafka. A flink stream processing job that copies messages from one topic to another.
 
 ## Running
 `terraform apply`
@@ -11,8 +11,12 @@ Docker must be running in order to build/deploy this project.
 
 Note: Current version (29 Jun 2023) has a setup which uses a Kinesis Analytics notebook, this is for network firewall blocking on excessive rates. This is optional, everything will work ok without it, but the Kinesis Analytics notebook creation is not handled by terraform, it has to be done manually (I do it from the AWS console, from the Kinesis stream page). Commands on what to run for rate limiting are in /notebook-queries.
 
+Jan 2024 - If using msk kafka, accesslog messages will be output to a topic `envoy-logs`, a flink stream processing job (`BasicStreamingJob.java`) will copy those messages to a new topic `envoy-logs-output`.
+
+Upon terraform apply completion, some useful outputs are written to your console.
+
 ## Validation
-Find your network load balancer address, e.g.: `my-nlb-dc2c1186ac4f1bcb.elb.eu-west-1.amazonaws.com`
+Find your network load balancer address (CLI or AWS Console Website), e.g.: `my-nlb-dc2c1186ac4f1bcb.elb.eu-west-1.amazonaws.com`
 
 Curl the URL: `http://your-nlb-dns-name.com/json` and you will get a template JSON response from HTTPBIN.
 
